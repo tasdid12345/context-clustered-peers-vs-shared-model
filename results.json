@@ -1,0 +1,31 @@
+{
+  "question": "Does grouping heterogeneous peers by visit-context similarity and training one model per group beat a single shared model on every peer's held-out data, without leaving low-data peers worse off?",
+  "method": "Covertype subsample; peers = dominant wilderness area; per-peer stratified 25% test split; k-means on per-peer context summaries; cluster LightGBMs blended per peer with local LightGBMs; baseline shared MLP; seeds 42-44.",
+  "dataset": {
+    "name": "Covertype (OpenML id 150)",
+    "source_url": "https://www.openml.org/d/150",
+    "n_rows": 60000,
+    "n_train": 44998,
+    "n_test": 15002,
+    "same_as_paper": false,
+    "baseline_is_papers_method": false
+  },
+  "metric_name": "macro-F1 on pooled test split",
+  "higher_is_better": true,
+  "baseline": "One shared MLPClassifier (64 hidden units) trained on pooled peer training data (FedAvg-style stand-in).",
+  "improved": "One LightGBM per k-means cluster of peer context summaries (k chosen by silhouette), each peer's prediction = local LightGBM blended with its cluster LightGBM, local weight n_p/(n_p+1000). Fixed hyperparameters (300 trees, lr 0.1, 63 leaves).",
+  "metrics": {
+    "baseline_score": 0.6195014542527425,
+    "improved_score": 0.8537269886088574,
+    "improvement": 0.23422553435611493,
+    "baseline_score_std": 0.02009681840062996,
+    "improved_score_std": 0.0033556577516419745,
+    "baseline_accuracy": 0.7774963338221571,
+    "improved_accuracy": 0.9068124250099986,
+    "baseline_worst_peer_acc": 0.6673773987206824,
+    "improved_worst_peer_acc": 0.8887704335465529,
+    "n_peers": 4,
+    "n_clusters": 2
+  },
+  "notes": "Only 4 peers (wilderness areas), so clustering and silhouette selection are very coarse. The improvement comes mainly from the stronger learner (gradient-boosted trees instead of a 30-iteration MLP); the baseline MLP is kept unchanged. The clustering effect alone was not isolated by an ablation. The shrinkage prior (1000) and LightGBM settings were fixed a priori and not tuned on the test set. Small peers lean on the cluster model, large peers on their local model. The improved model fits more models (cluster + local), so it uses more compute. Single data split; results are from one subsample."
+}
