@@ -1,25 +1,15 @@
-# Peer-context clustering vs. a shared model on Covertype
+# Peer-context clustering vs. shared model on Covertype
 
-Motivation: In "Causeways: Building Bridges with Context in Peer-To-Peer Federated Learning" (2025), peers with different visit contexts are argued to benefit from context-aware grouping rather than one global model. This repository is a small, self-contained test of that idea on a public tabular dataset.
+Question: does grouping peers (wilderness areas) by visit-context similarity and training one model per group beat a single shared model on each peer's held-out data?
 
-Question: Does grouping heterogeneous peers by visit-context similarity and training one model per group beat a single shared model on every peer's held-out data, without leaving low-data peers worse off?
+Setup: OpenML Covertype (id 150), 60k-row seeded subsample, per-peer stratified 25% test split, seeds 42–44, metric macro-F1 on the pooled test split.
 
-Dataset: Covertype from OpenML (id 150), subsampled for CPU speed. It is not the paper's own dataset. Peers are formed by dominant wilderness area, and each peer gets a stratified held-out split.
+- Baseline: one shared MLPClassifier (unchanged).
+- Improved: one LightGBM per k-means cluster of peer context summaries (k chosen by silhouette on training data), blended per peer with a local LightGBM using weight n_p/(n_p+1000). Hyperparameters are fixed a priori; nothing is tuned on the test set.
 
-Baseline: one shared MLP trained on pooled peer training data (a FedAvg-style stand-in, not the paper's algorithm).
+Run: `python analysis.py` (writes `results.json` and `figures/baseline_vs_improved.png`).
 
-Improved model: k-means clusters peers by their context summaries (per-peer feature statistics). One MLP is trained per cluster, and each peer's prediction blends its cluster model with its own local model, weighted toward the local model when the peer has more samples.
-
-Main metric is macro-F1 on the pooled test split. Secondary metrics are accuracy and the worst per-peer accuracy.
-
-## How to run
-
-```
-pip install -r requirements.txt
-python analysis.py
-```
-
-Results: written to `results.json` (charts go to `figures/`).
+Caveat: the gain is driven largely by the stronger learner; the clustering contribution was not isolated by an ablation.
 
 ## Reference
 
