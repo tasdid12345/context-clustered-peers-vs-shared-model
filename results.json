@@ -1,0 +1,31 @@
+{
+  "question": "Does grouping heterogeneous peers by visit-context similarity and training one model per group beat a single shared model on every peer's held-out data, without leaving low-data peers worse off?",
+  "method": "Covertype subsample; peers = dominant wilderness area; per-peer stratified 25% test split; k-means on per-peer context summaries; cluster MLPs blended per peer with local MLPs; seeds 42-44.",
+  "dataset": {
+    "name": "Covertype (OpenML id 150)",
+    "source_url": "https://www.openml.org/d/150",
+    "n_rows": 60000,
+    "n_train": 44998,
+    "n_test": 15002,
+    "same_as_paper": false,
+    "baseline_is_papers_method": false
+  },
+  "metric_name": "macro-F1 on pooled test split",
+  "higher_is_better": true,
+  "baseline": "One shared MLPClassifier (64 hidden units) trained on pooled peer training data (FedAvg-style stand-in).",
+  "improved": "One MLP per k-means cluster of peer context summaries (k chosen by silhouette), each peer's prediction = local MLP blended with its cluster MLP, local weight n_p/(n_p+1000).",
+  "metrics": {
+    "baseline_score": 0.6195014542527425,
+    "improved_score": 0.5951602442069442,
+    "improvement": -0.024341210045798256,
+    "baseline_score_std": 0.02009681840062996,
+    "improved_score_std": 0.008940995786234612,
+    "baseline_accuracy": 0.7774963338221571,
+    "improved_accuracy": 0.776252055281518,
+    "baseline_worst_peer_acc": 0.6673773987206824,
+    "improved_worst_peer_acc": 0.6538734896943851,
+    "n_peers": 4,
+    "n_clusters": 2
+  },
+  "notes": "Only 4 peers (wilderness areas), so clustering and silhouette selection are very coarse. The MLP is a stand-in for FedAvg, not the paper's algorithm. The shrinkage prior (1000) was fixed a priori and not tuned; no hyperparameter was tuned on the test set. Shrinkage direction: small peers lean on the cluster model, large peers on their local model. The improved model fits more models (cluster + local), so it uses more compute. Single data split; results are from one subsample."
+}
